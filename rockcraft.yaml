@@ -1,0 +1,28 @@
+name: static
+base: bare
+build-base: ubuntu@26.04
+version: "26.04"
+summary: Chiseled Ubuntu rock with the bare minimum needed just to run static binaries
+description: |
+    This is a static rock which is meant to be used as a parent image only.
+    It will provide no functionality on its own, apart from the Pebble entrypoint.
+
+    Use it to run statically compiled binaries (e.g., C/C++, Rust, Go, etc.).
+
+platforms:
+    amd64:
+
+run-user: _daemon_
+
+parts:
+    static-deps:
+        plugin: nil
+        stage-packages:
+            - base-files_base
+            - base-files_chisel
+            - base-files_release-info
+            - ca-certificates_data
+            - media-types_data
+            - netbase_default-hosts
+            - netbase_default-networks
+            - tzdata_zoneinfo

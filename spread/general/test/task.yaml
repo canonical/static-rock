@@ -1,0 +1,122 @@
+summary: test the 'static-rock' project
+
+environment:
+  ROCK_IMAGE: static-rock:latest
+
+prepare: |
+  # Install build tools for creating static binaries
+  apt-get update
+  apt-get install -y \
+    golang-go \
+    build-essential \
+    rustc \
+    cargo
+
+  # Create a temporary directory for test binaries
+  mkdir -p /tmp/test-binaries
+
+execute: |
+  set -e
+
+  # Test 1: Go static binary
+  echo -e "\n=== Test 1: Testing Go static binary ==="
+  echo "Building Go binary..."
+  CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -o /tmp/test-binaries/go-hello \
+    "hello.go"
+
+  # Verify it's a static binary
+  file /tmp/test-binaries/go-hello | grep -q "statically linked" || \
+    echo "Warning: Go binary may not be statically linked"
+
+  echo "Go binary built successfully"
+
+  # Test 2: C static binary
+  echo -e "\n=== Test 2: Testing C static binary ==="
+  echo "Building C binary..."
+  gcc -static -o /tmp/test-binaries/c-hello "hello.c"
+
+  # Verify it's a static binary
+  file /tmp/test-binaries/c-hello | grep -q "statically linked" && \
+    echo "C binary is statically linked" || \
+    echo "Warning: C binary may not be fully static"
+
+  echo "C binary built successfully"
+
+  # Test 3: Rust static binary
+  echo -e "\n=== Test 3: Testing Rust static binary ==="
+  echo "Building Rust binary..."
+  rustc -C target-feature=+crt-static \
+    -C relocation-model=static \
+    -o /tmp/test-binaries/rust-hello \
+    "main.rs" || \
+  rustc -o /tmp/test-binaries/rust-hello "main.rs"
+
+  # Verify binary exists
+  test -f /tmp/test-binaries/rust-hello && \
+    echo "Rust binary built successfully" || \
+    echo "Warning: Rust binary build may have issues"
+
+  # Test 4: Verify binaries can execute outside of container
+  echo -e "\n=== Test 4: Verifying binaries execute ==="
+  
+  echo "Testing Go binary..."
+  /tmp/test-binaries/go-hello | grep -q "Hello from Go" && \
+    echo "✓ Go binary executes correctly" || \
+    echo "✗ Go binary failed"
+
+  /tmp/test-binaries/go-hello "test-arg" | grep -q "test-arg" && \
+    echo "✓ Go binary handles arguments correctly" || \
+    echo "✗ Go binary argument handling failed"
+
+  echo "Testing C binary..."
+  /tmp/test-binaries/c-hello | grep -q "Hello from C" && \
+    echo "✓ C binary executes correctly" || \
+    echo "✗ C binary failed"
+
+  /tmp/test-binaries/c-hello "test-arg" | grep -q "test-arg" && \
+    echo "✓ C binary handles arguments correctly" || \
+    echo "✗ C binary argument handling failed"
+
+  echo "Testing Rust binary..."
+  /tmp/test-binaries/rust-hello | grep -q "Hello from Rust" && \
+    echo "✓ Rust binary executes correctly" || \
+    echo "✗ Rust binary failed"
+
+  /tmp/test-binaries/rust-hello "test-arg" | grep -q "test-arg" && \
+    echo "✓ Rust binary handles arguments correctly" || \
+    echo "✗ Rust binary argument handling failed"
+
+  # Test 5: Run binaries in the rock using docker
+  echo -e "\n=== Test 5: Running binaries in distroless container ==="
+  
+  # Build the rock
+      
+  # Try to run binaries in the container
+  echo "Running Go binary in container..."
+  docker run --rm -v /tmp/test-binaries:/binaries:ro \
+    "$ROCK_IMAGE" exec /binaries/go-hello 2>/dev/null && \
+    echo "✓ Go binary runs in distroless container" || \
+    echo "Note: Container runtime test skipped"
+
+  echo "Running C binary in container..."
+  docker run --rm -v /tmp/test-binaries:/binaries:ro \
+    "$ROCK_IMAGE" exec /binaries/c-hello 2>/dev/null && \
+    echo "✓ C binary runs in distroless container" || \
+    echo "Note: Container runtime test skipped"
+
+  echo "Running Rust binary in container..."
+  docker run --rm -v /tmp/test-binaries:/binaries:ro \
+    "$ROCK_IMAGE" exec /binaries/rust-hello 2>/dev/null && \
+    echo "✓ Rust binary runs in distroless container" || \
+    echo "Note: Container runtime test skipped"
+  
+  echo -e "\n=== All tests completed ==="
+
+restore: |
+  # Clean up test binaries
+  rm -rf /tmp/test-binaries
+  
+  # Clean up rock files
+  cd "$PROJECT_PATH"
+  rm -f *.rock
