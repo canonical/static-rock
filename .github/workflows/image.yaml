@@ -119,7 +119,7 @@ jobs:
     needs: [prepare, test]
     runs-on: ubuntu-latest
     if: |
-      needs.prepare.outputs.upload-matrix != '{"include": []}' &&
+      fromJSON(needs.prepare.outputs.upload-matrix).include[0] != null &&
       github.event_name != 'pull_request' && 
       github.ref == 'refs/heads/main'
     strategy:
