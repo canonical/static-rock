@@ -20,7 +20,7 @@ This rock is intended to be used as a **parent image only** and provides no func
 
 ### Prerequisites
 
-- [Rockcraft](https://documentation.ubuntu.com/rockcraft/en/latest/) installed
+- [Rockcraft](https://ubuntu.com/containers/rockcraft/docs/latest/) installed
 - [LXD](https://documentation.ubuntu.com/lxd/en/latest/) running
 - Linux system (Ubuntu 20.04 or later recommended)
 
@@ -40,6 +40,6 @@ rockcraft test
 
 ## Documentation
 
-- [Rockcraft Documentation](https://documentation.ubuntu.com/rockcraft/)
-- [Ubuntu Chiselled Images](https://documentation.ubuntu.com/chisel/)
+- [Rockcraft Documentation](https://ubuntu.com/containers/rockcraft/docs/)
+- [Ubuntu Chiselled Images](https://ubuntu.com/chisel/docs/)
 - [Pebble Reference](https://documentation.ubuntu.com/pebble/)
